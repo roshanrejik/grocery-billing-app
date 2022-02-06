@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+
+    </title>
+    <style>
+        * {
+            font-family: Arial;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root">
+
+    </div>
+
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+
+    <script type="text/babel">
+        const { useState } = React
+        const rootHandle = document.getElementById('root')
+        const data = [
+            { "id": 101, "name": "Rice-Raw Sona Masuri", "price": 54 },
+            { "id": 104, "name": "Rice-Raw Sona Masuri - super premium", "price": 58 },
+            { "id": 105, "name": "Poha thick", "price": 48 },
+            { "id": 110, "name": "Poha Medium", "price": 55 },
+            { "id": 111, "name": "Organic Sona Masuri Rice", "price": 69 }
+        ]
+
+        //Header component 
+        function Header(props) {
+            const date = new Date()
+            return (
+                <div>
+                    <h1>Raja Provision Store <span style={{ float: 'right' }}>{date.toLocaleDateString()}</span></h1>
+                    <hr />
+                </div>
+            )
+        }
+        function Search(props){
+            const {searchKey,handleSearchKey}=props
+            return(
+                <div>
+                    <input type="text" value={searchKey} style={{width:'98%',height:'20px'}} onChange={handleSearchKey} placeholder='Search item by name/code'/>
+                    <hr/>
+                </div>
+            )
+        }
+        function MenuItem(props){
+            const {data,searchKey,addCartItem}=props
+            return(
+                <div>
+                    <table border='1'>
+                        <caption>List of products</caption>
+                        <thead>
+                            <tr>
+                                <th>Name</th><th>Price</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                data.filter(item=>{
+                                    if((item.name).toLowerCase().includes(searchKey)||String(item.id).includes(searchKey))
+                                    return item
+                                }).map(item=>{
+                                    return(
+                                        <tr key={item.id}>
+                                            <td>{item.name}</td><td>{item.price}</td><td><input type="button" style={{color:'white',backgroundColor:'#008CBA'}} onClick={()=>{addCartItem(item.id)}} value="Add"/></td>
+                                        </tr>
+                                    )
+                                })
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            )
+        }
+        function CartItem(props){
+            const {cartArray,decQuantity,incQuantity,removeCartItem}=props
+            return (
+                <div>
+                    <table border='1'>
+                        <caption>List of Cart items</caption>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Name</th><th>Price</th><th>Quantity</th><th>Total</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                cartArray.map(item=>{
+                                    return (
+                                        <tr key={item.id}>
+                                            <td>{item.id}</td><td>{item.name}</td><td>{item.price}</td><td><input type="button" onClick={()=>decQuantity(item.id)} disabled={item.quantity==1} value="1-"/>{item.quantity}<input type="button" onClick={()=>incQuantity(item.id)} value="1+"/></td><td>{item.price*item.quantity}</td><td><input type="button" style={{color:'white',backgroundColor:'#f44336'}} onClick={()=>{removeCartItem(item.id)}} value="Remove"/></td>
+                                        </tr>
+                                    )
+                                })
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            )
+        }
+        function Bill(props){
+            const {reset}=props
+            return(
+                <div>
+                    <input type="button" style={{color:'black',backgroundColor:'yellow'}} onClick={()=>{window.print()}} value="Print Bill"/>
+                    <input type="button" style={{color:'white',backgroundColor:'green'}} onClick={reset} value="Add New Bill"/>
+                </div>
+            )
+        }
+        function Total(props){
+            const {sum}=props
+            return (
+                <h1 style={{float:'right'}}>Total - {sum}</h1>
+            )
+        }
+        function App(props) {
+            const {data}=props
+            const [searchKey,setSearchKey]=useState('')
+            const [cartArray,setCartArray]=useState([])
+            const handleSearchKey=(e)=>{
+                setSearchKey((e.target.value).toLowerCase())
+            }
+            const addCartItem=(ID)=>{
+                
+                const finder=data.find(item=>{
+                    if(item.id==ID){
+                        return {...item}
+                    }        
+                })
+                function include(){
+                    return cartArray.find(item=>{
+                        if(item.id==ID)
+                        {   
+                            alert(`${item.name} already present`)
+                            return item
+                        }
+                        })
+                }
+                if(include()){
+                    const newCartArray=cartArray.map(item=>{
+                        if(item.id==ID){
+                            return {...item,...{quantity:item.quantity+1}}
+                        }
+                        else{
+                            return {...item}
+                        }
+                    })
+                    setCartArray(newCartArray)
+                }
+                else{
+                const newCartArray=cartArray.concat({...finder,...{quantity:1}})
+                setCartArray(newCartArray)
+                }
+                setSearchKey('')
+            }
+            const incQuantity=(ID)=>{
+                const increase=cartArray.map(item=>{
+                    if(item.id==ID){
+                        return {...item,...{quantity:item.quantity+1}}
+                    }
+                    else{
+                        return {...item}
+                    }
+                })
+                setCartArray(increase)//Array after increase
+            }
+            const decQuantity=(ID)=>{
+                const decrease=cartArray.map(item=>{
+                    if(item.id==ID){
+                        return {...item,...{quantity:item.quantity-1}}
+                    }
+                    else{
+                        return {...item}
+                    }
+                })
+                setCartArray(decrease)//Array after decrease
+            }
+            const removeCartItem=(ID)=>{
+                const removedCartArray=cartArray.filter(item=>{
+                    if(item.id!=ID){
+                        return {...item}
+                    }
+                    else{
+                        confirm(`${item.name} will be removed`)
+                    }
+                })
+                setCartArray(removedCartArray)
+            }
+            const reset=()=>{
+                confirm('Confirm to reset')
+                setCartArray([])
+            }
+            const finalSum=()=>{
+                let sum=0
+                cartArray.forEach(item=>{
+                    sum+=item.quantity*item.price
+                })
+                return sum
+            }
+            console.log(cartArray);
+            return (
+                <div>
+                    <Header />
+                    <Search searchKey={searchKey} handleSearchKey={handleSearchKey} />
+                    {searchKey && <MenuItem data={data} searchKey={searchKey}  addCartItem={addCartItem} />}
+                    {cartArray.length>0 && <CartItem cartArray={cartArray} incQuantity={incQuantity} decQuantity={decQuantity} removeCartItem={removeCartItem}/>}
+                    {cartArray.length>0 && <Bill reset={reset}/>}
+                    {cartArray.length>0 && <Total  sum={finalSum()}/>}
+                </div>
+            )
+        }
+        ReactDOM.render(<App data={data} />, rootHandle)
+    </script>
+</body>
+
+</html>
